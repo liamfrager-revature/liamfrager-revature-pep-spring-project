@@ -12,6 +12,9 @@ import com.example.exception.*;
 import com.example.service.AccountService;
 import com.example.service.MessageService;
 
+/**
+ * The REST controller that exposes the endpoints for the social media API.
+ */
 @RestController
 public class SocialMediaController {
     private MessageService messageService;
@@ -117,7 +120,7 @@ public class SocialMediaController {
      * Exception handler for: <code>InvalidLoginException</code>.
      */
     @ExceptionHandler(InvalidLoginException.class)
-    private ResponseEntity<Void> invalidLogin() {
+    private ResponseEntity<Void> invalidLoginExceptionHandler() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 

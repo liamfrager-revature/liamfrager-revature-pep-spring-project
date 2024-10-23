@@ -6,6 +6,9 @@ import com.example.entity.Account;
 import com.example.exception.*;
 import com.example.repository.AccountRepository;
 
+/**
+ * A service for handling the <code>Account</code> business logic.
+ */
 @Service
 public class AccountService {
     public AccountRepository accountRepository;

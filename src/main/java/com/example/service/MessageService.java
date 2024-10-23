@@ -9,6 +9,9 @@ import com.example.exception.*;
 import com.example.repository.AccountRepository;
 import com.example.repository.MessageRepository;
 
+/**
+ * A service for handling the <code>Message</code> business logic.
+ */
 @Service
 public class MessageService {
     private final MessageRepository messageRepository;
