@@ -25,17 +25,17 @@ public class SocialMediaController {
         this.accountService = accountService;
     }
 
+    // --------------
+    // ROUTE HANDLERS
+    // --------------
+
     /**
      * Handler for the <code>/register</code> <code>POST</code> endpoint.
      * @param account The body of the request containing the account to be registered.
      */
     @PostMapping("/register")
-    private ResponseEntity<Account> register(@RequestBody Account account) {
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(accountService.register(account));
-        } catch (InvalidUsernameException | InvalidPasswordException | UserAlreadyExistsException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    private ResponseEntity<Account> register(@RequestBody Account account) throws InvalidUsernameException, InvalidPasswordException, UserAlreadyExistsException {
+        return ResponseEntity.ok(accountService.register(account));
     }
 
     /**
@@ -43,12 +43,8 @@ public class SocialMediaController {
      * @param account The body of the request containing the account to be logged in.
      */
     @PostMapping("/login")
-    private ResponseEntity<Account> login(@RequestBody Account account) {
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(accountService.login(account));
-        } catch (InvalidLoginException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    private ResponseEntity<Account> login(@RequestBody Account account) throws InvalidLoginException {
+        return ResponseEntity.ok(accountService.login(account));
     }
 
     /**
@@ -56,12 +52,8 @@ public class SocialMediaController {
      * @param message The body of the request containing the message data to be added.
      */
     @PostMapping("/messages")
-    private ResponseEntity<Message> postMessage(@RequestBody Message message) {
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(messageService.postMessage(message));
-        } catch (InvalidMessageTextException | InvalidUserIDException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    private ResponseEntity<Message> postMessage(@RequestBody Message message) throws InvalidMessageTextException , InvalidUserIDException {
+        return ResponseEntity.ok(messageService.postMessage(message));
     }
 
     /**
@@ -69,7 +61,7 @@ public class SocialMediaController {
      */
     @GetMapping("/messages")
     private ResponseEntity<List<Message>> getAllMessages() {
-        return ResponseEntity.status(HttpStatus.OK).body(messageService.getAllMessages());
+        return ResponseEntity.ok(messageService.getAllMessages());
     }
 
     /**
@@ -80,9 +72,9 @@ public class SocialMediaController {
     private ResponseEntity<Message> getMessageByID(@PathVariable int id) {
         Message message = messageService.getMessageByID(id);
         if (message == null)
-            return ResponseEntity.status(HttpStatus.OK).build();
+            return ResponseEntity.ok().build();
         else
-            return ResponseEntity.status(HttpStatus.OK).body(message);
+            return ResponseEntity.ok(message);
     }
 
     /**
@@ -90,12 +82,11 @@ public class SocialMediaController {
      * @param id The ID of the message to be deleted.
      */
     @DeleteMapping("/messages/{id}")
-    private ResponseEntity<Message> deleteMessageByID(@PathVariable int id) {
-        Message deletedMessage = messageService.deleteMessageByID(id);
-        if (deletedMessage == null)
-            return ResponseEntity.status(HttpStatus.OK).build();
-        else
-            return ResponseEntity.status(HttpStatus.OK).body(deletedMessage);
+    private ResponseEntity<Integer> deleteMessageByID(@PathVariable int id) {
+        int deletedRows = messageService.deleteMessageByID(id);
+        if (deletedRows > 0)
+            return ResponseEntity.ok(deletedRows);
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -104,25 +95,58 @@ public class SocialMediaController {
      * @param message The body of the request containing the message data to be updated.
      */
     @PatchMapping("/messages/{id}")
-    private ResponseEntity<Message> patchMessageByID(@PathVariable int id, @RequestBody Message message) {
-        try {
-            return ResponseEntity.status(HttpStatus.OK).body(messageService.patchMessageByID(id, message));
-        } catch (InvalidMessageTextException | InvalidMessageIDException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+    private ResponseEntity<Integer> patchMessageByID(@PathVariable int id, @RequestBody Message message) throws InvalidMessageTextException, InvalidMessageIDException {
+        return ResponseEntity.ok(messageService.patchMessageByID(id, message));
     }
 
     /**
      * Handler for the <code>/accounts/{account_id}/messages</code> <code>GET</code> endpoint.
      * @param account_id The ID of the account of whose messsages will be returned.
      */
-    @GetMapping("/account/{account_id}/messages")
+    @GetMapping("/accounts/{account_id}/messages")
     private ResponseEntity<List<Message>> getAllMessagesByAccountID(@PathVariable int account_id) {
-        return ResponseEntity.status(HttpStatus.OK).body(messageService.getAllMessagesByAccountID(account_id));
+        return ResponseEntity.ok(messageService.getAllMessagesByAccountID(account_id));
     }
 
-    @ExceptionHandler({InvalidMessageTextException.class, InvalidMessageIDException.class})
-    private ResponseEntity<Void> invalidMessageExceptionHandler() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    // ------------------
+    // EXCEPTION HANDLERS
+    // ------------------
+
+    /**
+     * <code>401 Unauthorized</code>.
+     * Exception handler for: <code>InvalidLoginException</code>.
+     */
+    @ExceptionHandler(InvalidLoginException.class)
+    private ResponseEntity<Void> invalidLogin() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    /**
+     * <code>400 Bad Request</code>.
+     * Exception handler for:
+     * <code>InvalidMessageTextException</code>,
+     * <code>InvalidMessageIDException</code>,
+     * <code>InvalidUserIDException</code>,
+     * <code>InvalidUsernameException</code>,
+     * <code>InvalidPasswordException</code>.
+     */
+    @ExceptionHandler({
+        InvalidMessageTextException.class,
+        InvalidMessageIDException.class,
+        InvalidUserIDException.class,
+        InvalidUsernameException.class,
+        InvalidPasswordException.class
+    })
+    private ResponseEntity<Void> badRequestExceptionHandler() {
+        return ResponseEntity.badRequest().build();
+    }
+
+    /**
+     * <code>409 Conflict</code>.
+     * Exception handler for: <code>UserAlreadyExistsException</code>.
+     */
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    private ResponseEntity<Void> userAlreadyExistsExceptionHandler() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
 }
